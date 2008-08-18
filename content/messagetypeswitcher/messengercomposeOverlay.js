@@ -57,7 +57,7 @@ function clearAllStyles()
 {
 	var frame = document.getElementById('content-frame');
 	try {
-//		frame.setAttribute('collapsed', true);
+		frame.setAttribute('collapsed', true);
 		var doc = gMsgCompose.editor.document;
 
 		saveSelection();
