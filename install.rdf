@@ -4,7 +4,7 @@
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="messagetypeswitcher@clear-code.com"
-                   em:name="Message Type Switcher"
+                   em:name="Plain Text Massage to HTML"
                    em:version="0.1"
                    em:description="Provides ability to switch message type from Plain Text to HTML."
                    em:creator="ClearCode Inc."
