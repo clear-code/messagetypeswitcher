@@ -43,7 +43,12 @@ window.addEventListener('DOMContentLoaded', function() {
 
 function toggleHTMLCommands(aEnable)
 {
-	if (!aEnable && !isInStartup) clearAllStyles();
+	if (
+		!aEnable &&
+		!isInStartup &&
+		sPrefs.getBoolPref('extensions.messagetypeswitcher@clear-code.com.clearHTMLElements')
+		)
+		clearAllStyles();
 }
 
 function clearAllStyles()
