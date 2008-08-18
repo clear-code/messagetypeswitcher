@@ -11,21 +11,21 @@ window.addEventListener('DOMContentLoaded', function() {
 			if (!gInitialComposeHtmlMode)
 				params.identity.composeHtml = true;
 			$&;
-			if (!gInitialComposeHtmlMode)
-				params.identity.composeHtml = false;
+			if (gInitialComposeHtmlMode != params.identity.composeHtml)
+				params.identity.composeHtml = gInitialComposeHtmlMode;
 		]]>.toString()
 	).replace(
 		/(\}\))?$/,
 		<![CDATA[
-			if (!gInitialComposeHtmlMode) {
-				window.setTimeout(function() {
+			window.setTimeout(function() {
+				if (!gInitialComposeHtmlMode && !isHTMLMessage()) {
 					gSendFormat = nsIMsgCompSendFormat.PlainText;
 					var item = document.getElementById('format_plain');
 					item.setAttribute('checked', true);
 					OutputFormatMenuSelect(item);
-					isInStartup = false;
-				}, 0);
-			}
+				}
+				isInStartup = false;
+			}, 0);
 		$1]]>.toString()
 	));
 
@@ -65,13 +65,7 @@ function clearAllStyles()
 		var sel = doc.defaultView.getSelection();
 		sel.removeAllRanges();
 
-		var nodes = doc.evaluate(
-				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature"))]',
-				doc,
-				null,
-				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-				null
-			);
+		var nodes = getHTMLMailElements();
 		var node, contents, anchor;
 		for (var i = nodes.snapshotLength-1; i > -1; i--)
 		{
@@ -148,3 +142,42 @@ function clearAllStyles()
 	frame.removeAttribute('collapsed');
 }
 
+function getBody()
+{
+	var doc = gMsgCompose.editor.document;
+	return doc.evaluate(
+				'/descendant::*[local-name() = "BODY"]',
+				doc,
+				null,
+				XPathResult.FIRST_ORDERED_NODE_TYPE,
+				null
+			).singleNodeValue;
+}
+
+function getHTMLMailElements()
+{
+	var doc = gMsgCompose.editor.document;
+	return doc.evaluate(
+			'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature"))]',
+			doc,
+			null,
+			XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+			null
+		);
+}
+
+function isHTMLMessage()
+{
+	var body = getBody();
+	return (
+		(
+			body.getAttribute('text') &&
+			body.getAttribute('text') != sPrefs.getCharPref('msgcompose.text_color')
+		) ||
+		(
+			body.getAttribute('bgcolor') &&
+			body.getAttribute('bgcolor') != sPrefs.getCharPref('msgcompose.background_color')
+		) ||
+		getHTMLMailElements().snapshotLength
+		);
+}
