@@ -26,4 +26,22 @@ window.addEventListener('DOMContentLoaded', function() {
 			}
 		$1]]>.toString()
 	));
+
+	eval('window.OutputFormatMenuSelect = '+window.OutputFormatMenuSelect.toSource().replace(
+		'case "format_plain":',
+		<![CDATA[$&
+			try {
+				goDoCommand('cmd_selectAll');
+				goDoCommand('cmd_removeStyles');
+				var doc = gMsgCompose.editor.document;
+				var range = doc.createRange();
+				range.selectNodeContents(doc.documentElement);
+				var sel = doc.defaultView.getSelection();
+				sel.removeAllRanges();
+				// TBD：モード切り替え前の選択範囲の復帰
+			}
+			catch(e) {
+			}
+		]]>.toString()
+	));
 }, false);
