@@ -55,8 +55,11 @@ function clearAllStyles()
 {
 	var frame = document.getElementById('content-frame');
 	try {
-		frame.setAttribute('collapsed', true);
+//		frame.setAttribute('collapsed', true);
 		var doc = gMsgCompose.editor.document;
+
+		saveSelection();
+
 		doc.defaultView.focus();
 
 		gMsgCompose.editor.selectAll();
@@ -66,8 +69,8 @@ function clearAllStyles()
 		goDoCommand('cmd_removeList');
 
 		var range = doc.createRange();
-		range.selectNodeContents(doc.documentElement);
 		var sel = doc.defaultView.getSelection();
+		range.selectNodeContents(doc.documentElement);
 		sel.removeAllRanges();
 
 		var nodes = getHTMLMailElements();
@@ -112,13 +115,7 @@ function clearAllStyles()
 				case 'li':
 					range.selectNodeContents(node);
 					contents = range.extractContents();
-					anchor = doc.evaluate(
-							'ancestor::*[contains(" TABLE UL OL ", concat(" ", local-name(), " "))]',
-							node,
-							null,
-							XPathResult.FIRST_ORDERED_NODE_TYPE,
-							null
-						).singleNodeValue;
+					anchor = getSingleNodeByXPath('ancestor::*[contains(" TABLE UL OL ", concat(" ", local-name(), " "))]', node);
 					if (anchor.nextSibling)
 						anchor.parentNode.insertBefore(contents, anchor.nextSibling);
 					else
@@ -127,15 +124,11 @@ function clearAllStyles()
 			}
 		}
 
-		var body = doc.evaluate(
-				'/descendant::*[local-name() = "BODY"]',
-				doc,
-				null,
-				XPathResult.FIRST_ORDERED_NODE_TYPE,
-				null
-			).singleNodeValue;
+		var body = getSingleNodeByXPath('/descendant::*[local-name() = "BODY"]');
 		body.setAttribute('text', sPrefs.getCharPref('msgcompose.text_color'));
 		body.setAttribute('bgcolor', sPrefs.getCharPref('msgcompose.background_color'));
+
+		restoreSelection();
 
 		doc.defaultView.scrollTo(0, 0);
 
@@ -147,23 +140,49 @@ function clearAllStyles()
 	frame.removeAttribute('collapsed');
 }
 
-function getBody()
+function saveSelection()
 {
 	var doc = gMsgCompose.editor.document;
-	return doc.evaluate(
-				'/descendant::*[local-name() = "BODY"]',
-				doc,
-				null,
-				XPathResult.FIRST_ORDERED_NODE_TYPE,
-				null
-			).singleNodeValue;
+	var sel = doc.defaultView.getSelection();
+	if (!sel.rangeCount) return;
+
+	var range = sel.getRangeAt(0);
+	var contents = range.extractContents();
+
+	var node = doc.createElement('BR');
+	node.setAttribute('moz-selection-point', 'start');
+	contents.insertBefore(node.cloneNode(true), contents.firstChild);
+
+	node.setAttribute('moz-selection-point', 'end');
+	contents.appendChild(node);
+
+	range.insertNode(contents);
+}
+
+function restoreSelection()
+{
+	var doc = gMsgCompose.editor.document;
+	var start = getSingleNodeByXPath('/descendant::*[@moz-selection-point="start"]');
+	var end = getSingleNodeByXPath('/descendant::*[@moz-selection-point="end"]');
+	if (!start || !end) return;
+
+	var sel = doc.defaultView.getSelection();
+	sel.removeAllRanges();
+
+	var range = doc.createRange();
+	range.setStartAfter(start);
+	range.setEndBefore(end);
+	sel.addRange(range);
+
+	start.parentNode.removeChild(start);
+	end.parentNode.removeChild(end);
 }
 
 function getHTMLMailElements()
 {
 	var doc = gMsgCompose.editor.document;
 	return doc.evaluate(
-			'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature"))]',
+			'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature")) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
 			doc,
 			null,
 			XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -173,7 +192,7 @@ function getHTMLMailElements()
 
 function isHTMLMessage()
 {
-	var body = getBody();
+	var body = getSingleNodeByXPath('/descendant::*[local-name() = "BODY"]');
 	return (
 		(
 			body.getAttribute('text') &&
@@ -185,4 +204,17 @@ function isHTMLMessage()
 		) ||
 		getHTMLMailElements().snapshotLength
 		);
+}
+
+function getSingleNodeByXPath(aExpression, aContext)
+{
+	aContext = aContext || gMsgCompose.editor.document;
+	var doc = aContext.ownerDocument || aContext ;
+	return doc.evaluate(
+				aExpression,
+				aContext,
+				null,
+				XPathResult.FIRST_ORDERED_NODE_TYPE,
+				null
+			).singleNodeValue;
 }
