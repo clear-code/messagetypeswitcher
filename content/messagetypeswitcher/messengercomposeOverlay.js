@@ -13,5 +13,17 @@ window.addEventListener('DOMContentLoaded', function() {
 			if (!gInitialComposeHtmlMode)
 				params.identity.composeHtml = false;
 		]]>.toString()
+	).replace(
+		/(\}\))?$/,
+		<![CDATA[
+			if (!gInitialComposeHtmlMode) {
+				window.setTimeout(function() {
+					gSendFormat = nsIMsgCompSendFormat.PlainText;
+					var item = document.getElementById('format_plain');
+					item.setAttribute('checked', true);
+					OutputFormatMenuSelect(item);
+				}, 0);
+			}
+		$1]]>.toString()
 	));
 }, false);
