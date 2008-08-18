@@ -1,0 +1,5 @@
+content	messagetypeswitcher	jar:chrome/messagetypeswitcher.jar!/content/messagetypeswitcher/
+
+overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://messagetypeswitcher/content/messengercomposeOverlay.xul
+
+#locale	messagetypeswitcher	ja	jar:chrome/messagetypeswitcher.jar!/locale/ja/messagetypeswitcher/
