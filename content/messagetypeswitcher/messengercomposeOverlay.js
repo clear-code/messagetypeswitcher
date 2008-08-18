@@ -4,6 +4,8 @@ var isInStartup = true;
 window.addEventListener('DOMContentLoaded', function() {
 	window.removeEventListener('DOMContentLoaded', arguments.callee, false);
 
+	// Always start in HTML mode, because we cannot switch to HTML mode
+	// after the component has been initialized to plain-text mode.
 	eval('window.ComposeStartup = '+window.ComposeStartup.toSource().replace(
 		'gMsgCompose = sMsgComposeService.InitCompose(window, params);',
 		<![CDATA[
@@ -133,8 +135,6 @@ function clearAllStyles()
 		restoreSelection();
 
 		doc.defaultView.scrollTo(0, 0);
-
-		// TBD：モード切り替え前の選択範囲の復帰
 	}
 	catch(e) {
 		alert(e);
