@@ -86,6 +86,7 @@ function clearAllStyles()
 				case 'h4':
 				case 'h5':
 				case 'h6':
+					node.appendChild(doc.createElement('BR'));
 				case 'font':
 				case 'b':
 				case 'i':
@@ -110,9 +111,10 @@ function clearAllStyles()
 					range.deleteContents();
 					break;
 				case 'caption':
+				case 'li':
+					node.appendChild(doc.createElement('BR'));
 				case 'td':
 				case 'th':
-				case 'li':
 					range.selectNodeContents(node);
 					contents = range.extractContents();
 					anchor = getSingleNodeByXPath('ancestor::*[contains(" TABLE UL OL ", concat(" ", local-name(), " "))]', node);
