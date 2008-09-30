@@ -36,8 +36,8 @@
 <!ENTITY button.label   "Mode">
 <!ENTITY button.tooltip "Switch the mode between HTML mail and Plain Text mail">
 
-<!ENTITY button.label.html2text   "to Plain Text">
-<!ENTITY button.tooltip.html2text "Switch the mode from HTML mail to Plain Text mail">
+<!ENTITY button.label.html2text   "HTML">
+<!ENTITY button.tooltip.html2text "Clicking switches the mode from HTML mail to Plain Text mail">
 
-<!ENTITY button.label.text2html   "to HTML">
-<!ENTITY button.tooltip.text2html "Switch the mode from Plain Text mail to HTML mail">
+<!ENTITY button.label.text2html   "Plain Text">
+<!ENTITY button.tooltip.text2html "Clicking switches the mode from Plain Text mail to HTML mail">

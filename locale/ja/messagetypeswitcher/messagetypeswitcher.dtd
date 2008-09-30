@@ -36,8 +36,8 @@
 <!ENTITY button.label   "作成モード">
 <!ENTITY button.tooltip "HTMLメールとプレーンテキストメールを切り替える">
 
-<!ENTITY button.label.html2text   "テキストメールにする">
-<!ENTITY button.tooltip.html2text "HTMLメールからプレーンテキストメールへ切り替える">
+<!ENTITY button.label.html2text   "HTML">
+<!ENTITY button.tooltip.html2text "クリックでHTMLメールからプレーンテキストメールへ切り替え">
 
-<!ENTITY button.label.text2html   "HTMLメールにする">
-<!ENTITY button.tooltip.text2html "プレーンテキストメールからHTMLメールへ切り替える">
+<!ENTITY button.label.text2html   "プレーンテキスト">
+<!ENTITY button.tooltip.text2html "クリックでプレーンテキストメールからHTMLメールへ切り替え">
