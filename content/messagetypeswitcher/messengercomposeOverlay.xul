@@ -46,7 +46,7 @@
 		label-html2text="&button.label.html2text;"
 		tooltiptext-html2text="&button.tooltip.html2text;"
 		label-text2html="&button.label.text2html;"
-		toolitptext-text2html="&button.tooltip.text2html;"/>
+		tooltiptext-text2html="&button.tooltip.text2html;"/>
 </broadcasterset>
 
 <toolbarpalette id="MsgComposeToolbarPalette">
