@@ -104,6 +104,41 @@ window.addEventListener('DOMContentLoaded', function() {
 	}
 
 	gToggleHTMLModeBroadcaster = document.getElementById('messagetypeswitcher-broadcaster');
+
+
+	// add toolbar button
+	var bar = document.getElementById('composeToolbar2');
+	var key = 'extensions.messagetypeswitcher@clear-code.com.button.initialShow.done';
+	var button = 'messagetypeswitcher-button';
+
+	const Prefs = Components
+			.classes['@mozilla.org/preferences;1']
+			.getService(Components.interfaces.nsIPrefBranch);
+
+	if (
+		!bar ||
+		!bar.currentSet ||
+		Prefs.getBoolPref(key)
+		)
+		return;
+
+	var currentset = bar.currentSet.replace(/__empty/, '');
+	var buttons = currentset.split(',');
+	if (buttons.indexOf(button) < 0)
+		buttons.push(button);
+
+	var newset = buttons.join(',');
+	if (currentset != newset) {
+		bar.currentSet = newset;
+		bar.setAttribute('currentset', newset);
+		document.persist(bar.id, 'currentset');
+	}
+
+	Prefs.setBoolPref(key, true);
+
+	if ('MailToolboxCustomizeDone' in window)
+		window.setTimeout('MailToolboxCustomizeDone(true);', 0);
+
 }, false);
 
 
