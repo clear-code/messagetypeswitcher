@@ -35,6 +35,7 @@
 
 var gInitialComposeHtmlMode;
 var isInStartup = true;
+var gToggleHTMLModeBroadcaster;
 
 window.addEventListener('DOMContentLoaded', function() {
 	window.removeEventListener('DOMContentLoaded', arguments.callee, false);
@@ -61,6 +62,9 @@ window.addEventListener('DOMContentLoaded', function() {
 					item.setAttribute('checked', true);
 					OutputFormatMenuSelect(item);
 				}
+				else {
+					updateToggleHTMLModeButton();
+				}
 				isInStartup = false;
 			}, 0);
 		$1]]>.toString()
@@ -75,6 +79,31 @@ window.addEventListener('DOMContentLoaded', function() {
 		'{',
 		'$& if (gSendFormat == nsIMsgCompSendFormat.PlainText) return;'
 	));
+
+
+	window.__messagetypeswitcher__CustomizeMailToolbar = window.CustomizeMailToolbar;
+	window.CustomizeMailToolbar = function(aId) {
+		destroyToggleHTMLModeButton();
+		window.__messagetypeswitcher__CustomizeMailToolbar.call(window, aId);
+	};
+
+	var toolbox = document.getElementById('compose-toolbox');
+	if (toolbox.customizeDone) {
+		toolbox.__messagetypeswitcher__customizeDone = toolbox.customizeDone;
+		toolbox.customizeDone = function(aChanged) {
+			this.__messagetypeswitcher__customizeDone(aChanged);
+			updateToggleHTMLModeButton();
+		};
+	}
+	if ('MailToolboxCustomizeDone' in window) {
+		window.__messagetypeswitcher__MailToolboxCustomizeDone = window.MailToolboxCustomizeDone;
+		window.MailToolboxCustomizeDone = function(aChanged) {
+			window.__messagetypeswitcher__MailToolboxCustomizeDone.apply(window, arguments);
+			updateToggleHTMLModeButton();
+		};
+	}
+
+	gToggleHTMLModeBroadcaster = document.getElementById('messagetypeswitcher-broadcaster');
 }, false);
 
 
@@ -86,6 +115,7 @@ function toggleHTMLCommands(aEnable)
 		sPrefs.getBoolPref('extensions.messagetypeswitcher@clear-code.com.clearHTMLElements')
 		)
 		clearAllStyles();
+	updateToggleHTMLModeButton();
 }
 
 function clearAllStyles()
@@ -254,4 +284,41 @@ function getSingleNodeByXPath(aExpression, aContext)
 				XPathResult.FIRST_ORDERED_NODE_TYPE,
 				null
 			).singleNodeValue;
+}
+
+
+function toggleHTMLMode()
+{
+	var htmlItem = document.getElementById('format_auto');
+	var plainTextItem = document.getElementById('format_plain');
+	var item = isHTMLMode() ? plainTextItem : htmlItem ;
+	var itemUnchecked = isHTMLMode() ? htmlItem : plainTextItem ;
+	item.setAttribute('checked', true);
+	itemUnchecked.removeAttribute('checked');
+	OutputFormatMenuSelect(item);
+}
+
+function isHTMLMode()
+{
+	var plainTextItem = document.getElementById('format_plain');
+	return plainTextItem.getAttribute('checked') != 'true';
+}
+
+function destroyToggleHTMLModeButton()
+{
+	setToggleHTMLModeButtonAttribute('default');
+}
+
+function updateToggleHTMLModeButton()
+{
+	setToggleHTMLModeButtonAttribute(isHTMLMode() ? 'html2text' : 'text2html' );
+}
+
+function setToggleHTMLModeButtonAttribute(aMode)
+{
+	var label = gToggleHTMLModeBroadcaster.getAttribute('label-'+aMode);
+	var tooltiptext = gToggleHTMLModeBroadcaster.getAttribute('tooltiptext-'+aMode);
+	gToggleHTMLModeBroadcaster.setAttribute('class', aMode);
+	gToggleHTMLModeBroadcaster.setAttribute('label', label);
+	gToggleHTMLModeBroadcaster.setAttribute('tooltiptext', tooltiptext);
 }

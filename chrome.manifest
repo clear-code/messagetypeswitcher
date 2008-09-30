@@ -2,5 +2,7 @@ content	messagetypeswitcher	jar:chrome/messagetypeswitcher.jar!/content/messaget
 
 overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://messagetypeswitcher/content/messengercomposeOverlay.xul
 
+style	chrome://global/content/customizeToolbar.xul	chrome://messagetypeswitcher/content/messengercomposeOverlay.css
+
 locale	messagetypeswitcher	en-US	jar:chrome/messagetypeswitcher.jar!/locale/en-US/messagetypeswitcher/
 locale	messagetypeswitcher	ja	jar:chrome/messagetypeswitcher.jar!/locale/ja/messagetypeswitcher/

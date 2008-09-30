@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -33,28 +32,12 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-<?xml-stylesheet type="text/css" href="chrome://messagetypeswitcher/content/messengercomposeOverlay.css"?>
-<!DOCTYPE dialog SYSTEM "chrome://messagetypeswitcher/locale/messagetypeswitcher.dtd">
-<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript" src="chrome://messagetypeswitcher/content/messengercomposeOverlay.js"/>
+<!ENTITY button.label   "Mode">
+<!ENTITY button.tooltip "Switch the mode between HTML mail and Plain Text mail">
 
-<broadcasterset id="composeBroadcasters">
-	<broadcaster id="messagetypeswitcher-broadcaster"
-		label-default="&button.label;"
-		tooltiptext-default="&button.tooltip;"
-		label-html2text="&button.label.html2text;"
-		tooltiptext-html2text="&button.tooltip.html2text;"
-		label-text2html="&button.label.text2html;"
-		toolitptext-text2html="&button.tooltip.text2html;"/>
-</broadcasterset>
+<!ENTITY button.label.html2text   "to Plain Text">
+<!ENTITY button.tooltip.html2text "Switch the mode from HTML mail to Plain Text mail">
 
-<toolbarpalette id="MsgComposeToolbarPalette">
-	<toolbarbutton id="messagetypeswitcher-button"
-		label="&button.label;"
-		tooltiptext="&button.tooltip;"
-		observes="messagetypeswitcher-broadcaster"
-		oncommand="toggleHTMLMode();"/>
-</toolbarpalette>
-
-</overlay>
+<!ENTITY button.label.text2html   "to HTML">
+<!ENTITY button.tooltip.text2html "Switch the mode from Plain Text mail to HTML mail">

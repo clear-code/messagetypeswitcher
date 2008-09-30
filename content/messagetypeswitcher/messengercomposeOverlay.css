@@ -1,0 +1,27 @@
+#messagetypeswitcher-button {
+	list-style-image: url("chrome://messagetypeswitcher/content/24.png");
+	-moz-image-region: rect(0, 24px, 24px, 0);
+/*	-moz-box-orient: vertical; */
+}
+
+#messagetypeswitcher-button.text2html {
+	-moz-image-region: rect(24px, 24px, 48px, 0);
+}
+
+#messagetypeswitcher-button.html2text {
+	-moz-image-region: rect(48px, 24px, 72px, 0);
+}
+
+
+[iconsize="small"] #messagetypeswitcher-button {
+	list-style-image: url("chrome://messagetypeswitcher/content/16.png");
+	-moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+[iconsize="small"] #messagetypeswitcher-button.text2html {
+	-moz-image-region: rect(16px, 16px, 32px, 0);
+}
+
+[iconsize="small"] #messagetypeswitcher-button.html2text {
+	-moz-image-region: rect(32px, 16px, 48px, 0);
+}
