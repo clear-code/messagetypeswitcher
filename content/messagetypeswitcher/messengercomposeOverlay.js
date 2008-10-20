@@ -148,9 +148,30 @@ function toggleHTMLCommands(aEnable)
 		!aEnable &&
 		!isInStartup &&
 		sPrefs.getBoolPref('extensions.messagetypeswitcher@clear-code.com.clearHTMLElements')
-		)
+		) {
 		clearAllStyles();
+		setPlainTextStyle(true);
+	}
+	else {
+		setPlainTextStyle(false);
+	}
 	updateToggleHTMLModeButton();
+}
+
+function setPlainTextStyle(aPlain)
+{
+	var frame = document.getElementById('content-frame');
+	var style = frame.contentDocument.body.style;
+	if (aPlain) {
+		style.fontFamily = '-moz-fixed';
+		style.whiteSpace = '-moz-pre-wrap';
+		style.width = '72ch';
+	}
+	else {
+		style.fontFamily = '';
+		style.whiteSpace = '';
+		style.width = '';
+	}
 }
 
 function clearAllStyles()
