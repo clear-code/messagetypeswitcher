@@ -43,12 +43,12 @@ window.addEventListener('DOMContentLoaded', function() {
 	// Always start in HTML mode, because we cannot switch to HTML mode
 	// after the component has been initialized to plain-text mode.
 	eval('window.ComposeStartup = '+window.ComposeStartup.toSource().replace(
-		'gMsgCompose = sMsgComposeService.InitCompose(window, params);',
+		/(gMsgCompose = (sMsgComposeService|composeSvc).InitCompose\(window, params\);)/,
 		<![CDATA[
 			gInitialComposeHtmlMode = params.identity.composeHtml;
 			if (!gInitialComposeHtmlMode)
 				params.identity.composeHtml = true;
-			$&;
+			$1;
 			if (gInitialComposeHtmlMode != params.identity.composeHtml)
 				params.identity.composeHtml = gInitialComposeHtmlMode;
 		]]>.toString()
@@ -56,6 +56,10 @@ window.addEventListener('DOMContentLoaded', function() {
 		/(\}\))?$/,
 		<![CDATA[
 			window.setTimeout(function() {
+				if (!getSingleNodeByXPath('/descendant::*[local-name() = "BODY"]')) {
+					window.setTimeout(arguments.callee, 10);
+					return;
+				}
 				if (!gInitialComposeHtmlMode && !isHTMLMessage()) {
 					gSendFormat = nsIMsgCompSendFormat.PlainText;
 					var item = document.getElementById('format_plain');
@@ -144,10 +148,13 @@ window.addEventListener('DOMContentLoaded', function() {
 
 function toggleHTMLCommands(aEnable)
 {
+	const Prefs = Components
+			.classes['@mozilla.org/preferences;1']
+			.getService(Components.interfaces.nsIPrefBranch);
 	if (
 		!aEnable &&
 		!isInStartup &&
-		sPrefs.getBoolPref('extensions.messagetypeswitcher@clear-code.com.clearHTMLElements')
+		Prefs.getBoolPref('extensions.messagetypeswitcher@clear-code.com.clearHTMLElements')
 		) {
 		clearAllStyles();
 		setPlainTextStyle(true);
@@ -216,10 +223,18 @@ function clearAllStyles()
 				case 'u':
 				case 'div':
 				case 'blockquote':
-				case 'a':
 				case 'pre':
 					range.selectNodeContents(node);
 					contents = range.extractContents();
+					range.selectNode(node);
+					range.deleteContents();
+					range.insertNode(contents);
+					break;
+				case 'a':
+					var uri = node.href;
+					range.selectNodeContents(node);
+					contents = range.extractContents();
+					contents.appendChild(doc.createTextNode('( '+uri+' )'));
 					range.selectNode(node);
 					range.deleteContents();
 					range.insertNode(contents);
@@ -249,9 +264,13 @@ function clearAllStyles()
 			}
 		}
 
+		const Prefs = Components
+				.classes['@mozilla.org/preferences;1']
+				.getService(Components.interfaces.nsIPrefBranch);
+
 		var body = getSingleNodeByXPath('/descendant::*[local-name() = "BODY"]');
-		body.setAttribute('text', sPrefs.getCharPref('msgcompose.text_color'));
-		body.setAttribute('bgcolor', sPrefs.getCharPref('msgcompose.background_color'));
+		body.setAttribute('text', Prefs.getCharPref('msgcompose.text_color'));
+		body.setAttribute('bgcolor', Prefs.getCharPref('msgcompose.background_color'));
 
 		restoreSelection();
 
@@ -315,15 +334,18 @@ function getHTMLMailElements()
 
 function isHTMLMessage()
 {
+	const Prefs = Components
+			.classes['@mozilla.org/preferences;1']
+			.getService(Components.interfaces.nsIPrefBranch);
 	var body = getSingleNodeByXPath('/descendant::*[local-name() = "BODY"]');
-	return (
+	return body && (
 		(
 			body.getAttribute('text') &&
-			body.getAttribute('text') != sPrefs.getCharPref('msgcompose.text_color')
+			body.getAttribute('text') != Prefs.getCharPref('msgcompose.text_color')
 		) ||
 		(
 			body.getAttribute('bgcolor') &&
-			body.getAttribute('bgcolor') != sPrefs.getCharPref('msgcompose.background_color')
+			body.getAttribute('bgcolor') != Prefs.getCharPref('msgcompose.background_color')
 		) ||
 		getHTMLMailElements().snapshotLength
 		);
@@ -331,15 +353,20 @@ function isHTMLMessage()
 
 function getSingleNodeByXPath(aExpression, aContext)
 {
-	aContext = aContext || gMsgCompose.editor.document;
-	var doc = aContext.ownerDocument || aContext ;
-	return doc.evaluate(
-				aExpression,
-				aContext,
-				null,
-				XPathResult.FIRST_ORDERED_NODE_TYPE,
-				null
-			).singleNodeValue;
+	try {
+		aContext = aContext || gMsgCompose.editor.document;
+		var doc = aContext.ownerDocument || aContext ;
+		return doc.evaluate(
+					aExpression,
+					aContext,
+					null,
+					XPathResult.FIRST_ORDERED_NODE_TYPE,
+					null
+				).singleNodeValue;
+	}
+	catch(e) {
+		return null;
+	}
 }
 
 
