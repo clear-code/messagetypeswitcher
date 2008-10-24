@@ -1,6 +1,9 @@
 var mainWindow;
 var composeWindow;
 
+var htmlMail = <>text<BR/><FONT COLOR="#FF0000">red</FONT><BR/><SMALL>small</SMALL></>;
+var textMail = <>text<BR/>text<BR/>text</>;
+
 function setHTMLMode(aHTML)
 {
 	utils.getPref('mail.accountmanager.accounts')
@@ -40,7 +43,9 @@ function testStartWithHTMLMode()
 	yield (function() {
 			return composeWindow = utils.getChromeWindow({ type : 'msgcompose' });
 		});
-	yield 1000;
+	yield (function() {
+			return !composeWindow.isInStartup;
+		});
 
 	var w = composeWindow;
 	var d = w.document;
@@ -52,6 +57,10 @@ function testStartWithHTMLMode()
 	var button = d.getElementById('messagetypeswitcher-button');
 	assert.isNotNull(button);
 	assert.equals('html2text', button.className);
+
+	assert.equals('true', d.getElementById('format_auto').getAttribute('checked'));
+
+	frame.contentDocument.body.innerHTML = 'text<BR/><FONT COLOR="#FF0000">red</FONT><BR/><SMALL>small</SMALL>';
 }
 
 function testStartWithTextMode()
@@ -62,7 +71,9 @@ function testStartWithTextMode()
 	yield (function() {
 			return composeWindow = utils.getChromeWindow({ type : 'msgcompose' });
 		});
-	yield 1000;
+	yield (function() {
+			return !composeWindow.isInStartup;
+		});
 
 	var w = composeWindow;
 	var d = w.document;
@@ -74,4 +85,8 @@ function testStartWithTextMode()
 	var button = d.getElementById('messagetypeswitcher-button');
 	assert.isNotNull(button);
 	assert.equals('text2html', button.className);
+
+	assert.equals('true', d.getElementById('format_plain').getAttribute('checked'));
+
+	frame.contentDocument.body.innerHTML = 'text<BR/>text<BR/>text';
 }
