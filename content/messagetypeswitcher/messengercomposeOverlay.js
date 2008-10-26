@@ -221,6 +221,8 @@ function clearAllStyles()
 				case 'b':
 				case 'i':
 				case 'u':
+				case 'small':
+				case 'big':
 				case 'div':
 				case 'blockquote':
 				case 'pre':
@@ -324,7 +326,7 @@ function getHTMLMailElements()
 {
 	var doc = gMsgCompose.editor.document;
 	return doc.evaluate(
-			'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature")) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
+			'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature")) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
 			doc,
 			null,
 			XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
