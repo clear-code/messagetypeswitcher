@@ -14,7 +14,7 @@
  * The Original Code is "Plain Text Massage to HTML".
  *
  * The Initial Developer of the Original Code is ClearCode Inc.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2008-2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): ClearCode Inc. <info@clear-code.com>
@@ -82,6 +82,12 @@ window.addEventListener('DOMContentLoaded', function() {
 	eval('window.doStyleUICommand = '+window.doStyleUICommand.toSource().replace(
 		'{',
 		'$& if (gSendFormat == nsIMsgCompSendFormat.PlainText) return;'
+	));
+
+	// https://bugzilla.mozilla.org/show_bug.cgi?id=472621
+	eval('window.loadHTMLMsgPrefs = '+window.loadHTMLMsgPrefs.toSource().replace(
+		'pref.getCharPref("msgcompose.font_face")',
+		'decodeURIComponent(escape($&))'
 	));
 
 
