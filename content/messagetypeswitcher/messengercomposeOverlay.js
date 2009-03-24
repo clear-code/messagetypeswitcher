@@ -176,9 +176,12 @@ function setPlainTextStyle(aPlain)
 	var frame = document.getElementById('content-frame');
 	var style = frame.contentDocument.body.style;
 	if (aPlain) {
+		const Prefs = Components
+				.classes['@mozilla.org/preferences;1']
+				.getService(Components.interfaces.nsIPrefBranch);
 		style.fontFamily = '-moz-fixed';
 		style.whiteSpace = '-moz-pre-wrap';
-		style.width = '72ch';
+		style.width = Prefs.getIntPref('mailnews.wraplength')+'ch';
 	}
 	else {
 		style.fontFamily = '';
