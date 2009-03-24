@@ -69,6 +69,7 @@ window.addEventListener('DOMContentLoaded', function() {
 				else {
 					updateToggleHTMLModeButton();
 				}
+				if (!isHTMLMode()) setPlainTextStyle(true);
 				isInStartup = false;
 			}, 0);
 		$1]]>.toString()
