@@ -69,7 +69,7 @@ window.addEventListener('DOMContentLoaded', function() {
 				else {
 					updateToggleHTMLModeButton();
 				}
-				if (!isHTMLMode()) setPlainTextStyle(true);
+				window.setTimeout('if (!isHTMLMode()) setPlainTextStyle(true);', 0);
 				isInStartup = false;
 			}, 0);
 		$1]]>.toString()
@@ -183,6 +183,12 @@ function setPlainTextStyle(aPlain)
 		style.fontFamily = '-moz-fixed';
 		style.whiteSpace = '-moz-pre-wrap';
 		style.width = Prefs.getIntPref('mailnews.wraplength')+'ch';
+
+		doStatefulCommand('cmd_fontFace', null);
+		doStatefulCommand('cmd_fontFace', null)
+		EditorRemoveTextProperty('font', 'size');
+		EditorRemoveTextProperty('small', '');
+		EditorRemoveTextProperty('big', '');
 	}
 	else {
 		style.fontFamily = '';
