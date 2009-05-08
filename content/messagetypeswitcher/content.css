@@ -1,0 +1,7 @@
+body[style*="-moz-fixed"],
+body[style*="-moz-fixed"] pre {
+	white-space: -moz-pre-wrap;
+}
+body[style*="width"] pre {
+	width: inherit;
+}
