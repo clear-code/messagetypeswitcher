@@ -35,6 +35,7 @@
 
 var MessageTypeSwitcher = {
 
+	kPLAINTEXT : 'messagetypeswitcher-plaintext-body',
 	kCHARACTER : 'messagetypeswitcher-character',
 	kGENERATED : 'messagetypeswitcher-generated',
 
@@ -236,8 +237,8 @@ var MessageTypeSwitcher = {
 
 	setPlainTextStyle : function(aPlain)
 	{
-		var frame = document.getElementById('content-frame');
-		var style = frame.contentDocument.body.style;
+		var body = this.document.body;
+		var style = body.style;
 		if (aPlain) {
 			// bodyにwhite-spaceを設定すると、プレーンテキストとして送信する時に何故か
 			// 本文先頭に半角スペースが1つ挿入された状態となってしまう。
@@ -246,6 +247,7 @@ var MessageTypeSwitcher = {
 //			style.whiteSpace = '-moz-pre-wrap';
 			style.fontFamily = '-moz-fixed';
 			style.width = this.Prefs.getIntPref('mailnews.wraplength')+'ch';
+			body.setAttribute(this.kPLAINTEXT, true);
 
 			doStatefulCommand('cmd_fontFace', null);
 			EditorRemoveTextProperty('font', 'size');
@@ -257,6 +259,7 @@ var MessageTypeSwitcher = {
 //			style.whiteSpace = '';
 			style.fontFamily = '';
 			style.width = '';
+			body.removeAttribute(this.kPLAINTEXT);
 			doStatefulCommand('cmd_paragraphState', '')
 		}
 //		var body = this.document.body;
@@ -512,7 +515,17 @@ var MessageTypeSwitcher = {
 		var source = body.innerHTML;
 		var className = this.kCHARACTER;
 		source = source.replace(/[>\n][^<>\n]{2,}[<\n]/g, function(aPart) {
-			var parts = aPart.split('');
+			var parts = [];
+			var index;
+			while ((index = aPart.indexOf('&')) > -1)
+			{
+				parts = parts.concat(aPart.substring(0, index).split(''));
+				aPart = aPart.substring(index);
+				index = aPart.indexOf(';');
+				parts.push(aPart.substring(0, index+1));
+				aPart = aPart.substring(index+1);
+			}
+			if (aPart) parts = parts.concat(aPart.split(''));
 			var first = parts.shift();
 			var last = parts.pop();
 			var id = Date.now() + '-' + parseInt(Math.random() * 65000);
@@ -591,9 +604,16 @@ var MessageTypeSwitcher = {
 	},
 	clearContainers : function()
 	{
-		var regexp = new RegExp('<span[^>]+class="'+this.kCHARACTER+'"[^>]+>(.)</span>', 'gi');
+		var regexp = new RegExp('<span[^>]+class="'+this.kCHARACTER+'"[^>]+>([^<]+)</span>', 'gi');
 		var body = this.document.body;
-		body.innerHTML = body.innerHTML.replace(regexp, '$1');
+		var source = body.innerHTML;
+		var previous;
+		do {
+			previous = source;
+			source = source.replace(regexp, '$1');
+		}
+		while (source != previous);
+		body.innerHTML = source;
 	},
 
 

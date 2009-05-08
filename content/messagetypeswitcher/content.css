@@ -1,12 +1,9 @@
-body[style*="-moz-fixed"],
-body[style*="-moz-fixed"] pre {
+body[messagetypeswitcher-plaintext-body="true"],
+body[messagetypeswitcher-plaintext-body="true"] pre {
 	white-space: -moz-pre-wrap;
 }
-body[style*="width"] pre {
-	width: inherit;
-}
 
-body[style*="-moz-fixed"] pre pre,
-body[style*="-moz-fixed"] pre[class="messagetypeswitcher-generated"] {
+body[messagetypeswitcher-plaintext-body="true"] pre:not([class="moz-signature"]) {
+	width: inherit;
 	margin: 0;
 }
