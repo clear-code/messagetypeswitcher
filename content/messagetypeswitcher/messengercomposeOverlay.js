@@ -175,24 +175,28 @@ function toggleHTMLCommands(aEnable)
 function setPlainTextStyle(aPlain)
 {
 	var frame = document.getElementById('content-frame');
+	var documentStyle = frame.contentDocument.documentElement.style;
 	var style = frame.contentDocument.body.style;
 	if (aPlain) {
 		const Prefs = Components
 				.classes['@mozilla.org/preferences;1']
 				.getService(Components.interfaces.nsIPrefBranch);
+		// bodyにwhite-spaceを設定すると、プレーンテキストとして送信する時に何故か
+		// 本文先頭に半角スペースが1つ挿入された状態となってしまう。
+		// ていうかそもそも、white-spaceが未設定でもEnterで改行したら改行される
+		// （BR要素が挿入される）ので、この指定は不要みたい。
+//		style.whiteSpace = '-moz-pre-wrap';
 		style.fontFamily = '-moz-fixed';
-		style.whiteSpace = '-moz-pre-wrap';
 		style.width = Prefs.getIntPref('mailnews.wraplength')+'ch';
 
 		doStatefulCommand('cmd_fontFace', null);
-		doStatefulCommand('cmd_fontFace', null)
 		EditorRemoveTextProperty('font', 'size');
 		EditorRemoveTextProperty('small', '');
 		EditorRemoveTextProperty('big', '');
 	}
 	else {
+//		style.whiteSpace = '';
 		style.fontFamily = '';
-		style.whiteSpace = '';
 		style.width = '';
 	}
 }
