@@ -36,6 +36,7 @@
 var MessageTypeSwitcher = {
 
 	kCHARACTER : 'messagetypeswitcher-character',
+	kGENERATED : 'messagetypeswitcher-generated',
 
 	initialComposeHtmlMode : null,
 	inStartupProcess : true,
@@ -78,6 +79,11 @@ var MessageTypeSwitcher = {
 	get document()
 	{
 		return gMsgCompose.editor.document;
+	},
+
+	get signatureBlock()
+	{
+		return this.getSingleNodeByXPath('/descendant::*[local-name()="PRE" and @class="moz-signature"]');
 	},
 
 	init : function()
@@ -483,6 +489,19 @@ var MessageTypeSwitcher = {
 	formatPlainText : function()
 	{
 		if (this.isHTMLMode()) return;
+
+		var body = this.document.body;
+		if (body.firstChild.localName != 'pre') {
+			var range = this.document.createRange();
+			range.selectNodeContents(body);
+			var signature = this.signatureBlock;
+			if (signature) range.setEndBefore(signature);
+			var pre = this.document.createElement('pre');
+			pre.setAttribute('class', this.kGENERATED);
+			pre.appendChild(range.extractContents());
+			range.insertNode(pre);
+			range.detach();
+		}
 		this.splitToCharacters();
 		this.breakLines();
 		this.clearContainers();

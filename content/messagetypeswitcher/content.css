@@ -5,3 +5,8 @@ body[style*="-moz-fixed"] pre {
 body[style*="width"] pre {
 	width: inherit;
 }
+
+body[style*="-moz-fixed"] pre pre,
+body[style*="-moz-fixed"] pre[class="messagetypeswitcher-generated"] {
+	margin: 0;
+}
