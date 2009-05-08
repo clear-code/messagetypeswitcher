@@ -35,6 +35,8 @@
 
 var MessageTypeSwitcher = {
 
+	kCHARACTER : 'messagetypeswitcher-character',
+
 	initialComposeHtmlMode : null,
 	inStartupProcess : true,
 
@@ -71,6 +73,11 @@ var MessageTypeSwitcher = {
 	get broadcaster()
 	{
 		return document.getElementById('messagetypeswitcher-broadcaster');
+	},
+
+	get document()
+	{
+		return gMsgCompose.editor.document;
 	},
 
 	init : function()
@@ -117,7 +124,6 @@ var MessageTypeSwitcher = {
 						MessageTypeSwitcher.updateToggleHTMLModeButton();
 					}
 					window.setTimeout(function() {
-						MessageTypeSwitcher.unformatPlainText();
 						if (!MessageTypeSwitcher.isHTMLMode())
 							MessageTypeSwitcher.setPlainTextStyle(true);
 					}, 0);
@@ -140,14 +146,6 @@ var MessageTypeSwitcher = {
 		eval('window.GenericSendMessage = '+window.GenericSendMessage.toSource().replace(
 			'{',
 			'{ MessageTypeSwitcher.formatPlainText();'
-		).replace(
-			/return;/g,
-			'MessageTypeSwitcher.unformatPlainText(); return;'
-		));
-
-		eval('progressListener.onStateChange = '+progressListener.onStateChange.toSource().replace(
-			'gSendOrSaveOperationInProgress = false;',
-			'MessageTypeSwitcher.unformatPlainText(); $&'
 		));
 
 
@@ -255,6 +253,8 @@ var MessageTypeSwitcher = {
 			style.width = '';
 			doStatefulCommand('cmd_paragraphState', '')
 		}
+//		var body = this.document.body;
+//		body.innerHTML = body.innerHTML.replace(/<BR>\n|\n<BR>|\n<BR>\n/g, '<BR>');
 	},
 
 	clearAllStyles : function()
@@ -262,7 +262,7 @@ var MessageTypeSwitcher = {
 		var frame = document.getElementById('content-frame');
 		try {
 			frame.setAttribute('collapsed', true);
-			var doc = gMsgCompose.editor.document;
+			var doc = this.document;
 
 			this.saveSelection();
 
@@ -342,7 +342,7 @@ var MessageTypeSwitcher = {
 				}
 			}
 
-			var body = this.getSingleNodeByXPath('/descendant::*[local-name() = "BODY"]');
+			var body = doc.body;
 			body.setAttribute('text', this.Prefs.getCharPref('msgcompose.text_color'));
 			body.setAttribute('bgcolor', this.Prefs.getCharPref('msgcompose.background_color'));
 
@@ -358,7 +358,7 @@ var MessageTypeSwitcher = {
 
 	saveSelection : function()
 	{
-		var doc = gMsgCompose.editor.document;
+		var doc = this.document;
 		var sel = doc.defaultView.getSelection();
 		if (!sel.rangeCount) return;
 
@@ -377,7 +377,7 @@ var MessageTypeSwitcher = {
 
 	restoreSelection : function()
 	{
-		var doc = gMsgCompose.editor.document;
+		var doc = this.document;
 		var start = this.getSingleNodeByXPath('/descendant::*[@moz-selection-point="start"]');
 		var end = this.getSingleNodeByXPath('/descendant::*[@moz-selection-point="end"]');
 		if (!start || !end) return;
@@ -397,7 +397,7 @@ var MessageTypeSwitcher = {
 
 	getHTMLMailElements : function()
 	{
-		var doc = gMsgCompose.editor.document;
+		var doc = this.document;
 		return doc.evaluate(
 				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature")) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
 				doc,
@@ -426,7 +426,7 @@ var MessageTypeSwitcher = {
 	getSingleNodeByXPath : function(aExpression, aContext)
 	{
 		try {
-			aContext = aContext || gMsgCompose.editor.document;
+			aContext = aContext || this.document;
 			var doc = aContext.ownerDocument || aContext ;
 			return doc.evaluate(
 						aExpression,
@@ -483,41 +483,98 @@ var MessageTypeSwitcher = {
 	formatPlainText : function()
 	{
 		if (this.isHTMLMode()) return;
-		var nodes = this.preElements;
-		var node;
-		for (var i = nodes.snapshotLength-1; i > -1; i--)
-		{
-			node = nodes.snapshotItem(i);
-			node.style.whiteSpace = '-moz-pre-wrap';
-			node.style.fontFamily = '-moz-fixed';
-			node.style.width = this.Prefs.getIntPref('mailnews.wraplength')+'ch';
-		}
+		this.splitToCharacters();
+		this.breakLines();
+		this.clearContainers();
 	},
-
-	unformatPlainText : function()
+	splitToCharacters : function()
 	{
-		if (this.isHTMLMode()) return;
-		var nodes = this.preElements;
-		var node;
-		for (var i = nodes.snapshotLength-1; i > -1; i--)
-		{
-			node = nodes.snapshotItem(i);
-			node.style.whiteSpace = '';
-			node.style.fontFamily = '';
-			node.style.width = '';
-		}
+		var body = this.document.body;
+		var source = body.innerHTML;
+		var className = this.kCHARACTER;
+		source = source.replace(/[>\n][^<>\n]{2,}[<\n]/g, function(aPart) {
+			var parts = aPart.split('');
+			var first = parts.shift();
+			var last = parts.pop();
+			var id = Date.now() + '-' + parseInt(Math.random() * 65000);
+			var startTag = '<span class="'+className+'" source-id="'+id+'">';
+			var endTag = '</span>';
+			return first + startTag + parts.join(endTag + startTag) + endTag + last;
+		});
+		body.innerHTML = source;
 	},
-
-	get preElements()
+/*	// DOM1 Version
+	splitToCharacters : function()
 	{
-		var doc = gMsgCompose.editor.document;
-		return doc.evaluate(
-				'/descendant::*[local-name()="PRE"]',
+		return;
+		var doc = this.document;
+		var nodes = doc.evaluate(
+				'/descendant::*[local-name()="BODY"]/descendant::text()[not(ancestor::*[@class="'+this.kCHARACTER+'"])]',
 				doc,
 				null,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
 				null
 			);
+		for (var i = nodes.snapshotLength-1; i > -1; i--)
+		{
+			this.splitToCharactersSub(nodes.snapshotItem(i));
+		}
+	},
+	splitToCharactersSub : function(aNode)
+	{
+		var doc = aNode.ownerDocument;
+		var container = doc.createElement('span');
+		container.setAttribute('class', this.kCHARACTER);
+		container.setAttribute('source-id', Date.now() + '-' + parseInt(Math.random() * 65000));
+
+		var fragment = doc.createDocumentFragment();
+		aNode.nodeValue.split('').forEach(function(aChar) {
+			var node = container.cloneNode(true);
+			node.appendChild(doc.createTextNode(aChar));
+			fragment.appendChild(node);
+		});
+		var range = doc.createRange();
+		range.selectNode(aNode);
+		range.deleteContents();
+		range.insertNode(fragment);
+		range.detach();
+	},
+*/
+	breakLines : function()
+	{
+		var doc = this.document;
+		var className = this.kCHARACTER;
+		var nsIDOMNodeFilter = Components.interfaces.nsIDOMNodeFilter;
+		var walker = doc.createTreeWalker(
+				doc,
+				nsIDOMNodeFilter.SHOW_ELEMENT,
+				function(aNode) {
+					if (
+						aNode.getAttribute('class') != className ||
+						!aNode.previousSibling ||
+						aNode.previousSibling.nodeType != aNode.ELEMENT_NODE ||
+						aNode.previousSibling.getAttribute('class') != className ||
+						aNode.getAttribute('source-id') != aNode.previousSibling.getAttribute('source-id') ||
+						aNode.offsetTop == aNode.previousSibling.offsetTop
+						)
+						return nsIDOMNodeFilter.FILTER_SKIP;
+					return nsIDOMNodeFilter.FILTER_ACCEPT;
+				},
+				false
+			);
+		walker.currentNode = doc;
+		var node;
+		var br = doc.createElement('BR');
+		while(node = walker.nextNode())
+		{
+			node.parentNode.insertBefore(br.cloneNode(true), node);
+		}
+	},
+	clearContainers : function()
+	{
+		var regexp = new RegExp('<span[^>]+class="'+this.kCHARACTER+'"[^>]+>(.)</span>', 'gi');
+		var body = this.document.body;
+		body.innerHTML = body.innerHTML.replace(regexp, '$1');
 	},
 
 
