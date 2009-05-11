@@ -320,6 +320,11 @@ var MessageTypeSwitcher = {
 						node.innerHTML = node.innerHTML
 											.replace(/^/gm, '&gt; ')
 											.replace(/(<br>)/gi, '$1&gt; ');
+						// 返信元メールの引用は、そのまま展開すると前の行と繋がってしまうので
+						// brを先頭に足してやる
+						if (node.previousSibling && node.previousSibling.nodeType == Node.TEXT_NODE) {
+							node.insertBefore(doc.createElement('br'), node.firstChild);
+						}
 						range.selectNodeContents(node);
 						contents = range.extractContents();
 						range.selectNode(node);
