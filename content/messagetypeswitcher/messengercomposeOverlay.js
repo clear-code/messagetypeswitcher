@@ -131,8 +131,9 @@ var MessageTypeSwitcher = {
 						MessageTypeSwitcher.updateToggleHTMLModeButton();
 					}
 					window.setTimeout(function() {
-						if (!MessageTypeSwitcher.isHTMLMode())
-							MessageTypeSwitcher.setPlainTextStyle(true);
+						if (MessageTypeSwitcher.isHTMLMode()) return;
+						MessageTypeSwitcher.clearAllStyles();
+						MessageTypeSwitcher.setPlainTextStyle(true);
 					}, 0);
 					MessageTypeSwitcher.inStartupProcess = false;
 				}, 0);
@@ -288,7 +289,7 @@ var MessageTypeSwitcher = {
 			range.selectNodeContents(doc.documentElement);
 			sel.removeAllRanges();
 
-			var nodes = this.getHTMLMailElements();
+			var nodes = this.allHTMLMailElements;
 			var node, contents, anchor;
 			for (var i = nodes.snapshotLength-1; i > -1; i--)
 			{
@@ -418,11 +419,24 @@ var MessageTypeSwitcher = {
 	},
 
 
-	getHTMLMailElements : function()
+	get allHTMLMailElements()
 	{
 		var doc = this.document;
 		return doc.evaluate(
 				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature")) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
+				doc,
+				null,
+				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+				null
+			);
+	},
+
+	// except "BLOCKQUOTE" and "PRE"
+	get HTMLMailElements()
+	{
+		var doc = this.document;
+		return doc.evaluate(
+				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
 				doc,
 				null,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -442,7 +456,7 @@ var MessageTypeSwitcher = {
 				body.getAttribute('bgcolor') &&
 				body.getAttribute('bgcolor') != this.Prefs.getCharPref('msgcompose.background_color')
 			) ||
-			this.getHTMLMailElements().snapshotLength
+			this.HTMLMailElements.snapshotLength
 			);
 	},
 
