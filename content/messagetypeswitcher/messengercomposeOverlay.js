@@ -309,8 +309,17 @@ var MessageTypeSwitcher = {
 					case 'small':
 					case 'big':
 					case 'div':
-					case 'blockquote':
 					case 'pre':
+						range.selectNodeContents(node);
+						contents = range.extractContents();
+						range.selectNode(node);
+						range.deleteContents();
+						range.insertNode(contents);
+						break;
+					case 'blockquote':
+						node.innerHTML = node.innerHTML
+											.replace(/^/gm, '&gt; ')
+											.replace(/(<br>)/gi, '$1&gt; ');
 						range.selectNodeContents(node);
 						contents = range.extractContents();
 						range.selectNode(node);
