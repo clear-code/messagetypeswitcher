@@ -254,7 +254,7 @@ var MessageTypeSwitcher = {
 			EditorRemoveTextProperty('font', 'size');
 			EditorRemoveTextProperty('small', '');
 			EditorRemoveTextProperty('big', '');
-			doStatefulCommand('cmd_paragraphState', 'pre')
+			doStatefulCommand('cmd_paragraphState', '')
 		}
 		else {
 //			style.whiteSpace = '';
