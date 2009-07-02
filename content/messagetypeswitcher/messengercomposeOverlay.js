@@ -84,7 +84,7 @@ var MessageTypeSwitcher = {
 
 	get signatureBlock()
 	{
-		return this.getSingleNodeByXPath('/descendant::*[local-name()="PRE" and @class="moz-signature"]');
+		return this.getSingleNodeByXPath('/descendant::*[translate(local-name(), "pre", "PRE")="PRE" and @class="moz-signature"]');
 	},
 
 	init : function()
@@ -117,7 +117,7 @@ var MessageTypeSwitcher = {
 			/(\}\))?$/,
 			<![CDATA[
 				window.setTimeout(function() {
-					if (!MessageTypeSwitcher.getSingleNodeByXPath('/descendant::*[local-name() = "BODY"]')) {
+					if (!MessageTypeSwitcher.getSingleNodeByXPath('/descendant::*[translate(local-name(), "body", "BODY")="BODY"]')) {
 						window.setTimeout(arguments.callee, 10);
 						return;
 					}
@@ -385,7 +385,7 @@ var MessageTypeSwitcher = {
 					case 'th':
 						range.selectNodeContents(node);
 						contents = range.extractContents();
-						anchor = this.getSingleNodeByXPath('ancestor::*[contains(" TABLE UL OL ", concat(" ", local-name(), " "))]', node);
+						anchor = this.getSingleNodeByXPath('ancestor::*[contains(" TABLE UL OL ", concat(" ", translate(local-name(), "tableuo", "TABLEUO"), " "))]', node);
 						if (anchor.nextSibling)
 							anchor.parentNode.insertBefore(contents, anchor.nextSibling);
 						else
@@ -448,7 +448,7 @@ var MessageTypeSwitcher = {
 	{
 		var doc = this.document;
 		return doc.evaluate(
-				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature") and not(@moz-plaintext-mail-body)) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
+				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", translate(local-name(), "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"), " ")) or (translate(local-name(), "pre", "PRE")="PRE" and not(@class="moz-signature") and not(@moz-plaintext-mail-body)) or (translate(local-name(), "span", "SPAN")="SPAN" and contains(@class, "mozToc"))]',
 				doc,
 				null,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -461,7 +461,7 @@ var MessageTypeSwitcher = {
 	{
 		var doc = this.document;
 		return doc.evaluate(
-				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
+				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", translate(local-name(), "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"), " ")) or (translate(local-name(), "span", "SPAN")="SPAN" and contains(@class, "mozToc"))]',
 				doc,
 				null,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -473,7 +473,7 @@ var MessageTypeSwitcher = {
 	{
 		var doc = this.document;
 		return doc.evaluate(
-				'/descendant::*[local-name()="PRE" and @moz-plaintext-mail-body="true"]',
+				'/descendant::*[translate(local-name(), "pre", "PRE")="PRE" and @moz-plaintext-mail-body="true"]',
 				doc,
 				null,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -484,14 +484,14 @@ var MessageTypeSwitcher = {
 	get signature()
 	{
 		return this.getSingleNodeByXPath(
-				'/descendant::*[local-name()="PRE" and @class="moz-signature"]',
+				'/descendant::*[translate(local-name(), "pre", "PRE")="PRE" and @class="moz-signature"]',
 				this.document
 			);
 	},
 
 	isHTMLMessage : function()
 	{
-		var body = this.getSingleNodeByXPath('/descendant::*[local-name() = "BODY"]');
+		var body = this.getSingleNodeByXPath('/descendant::*[translate(local-name(), "body", "BODY")="BODY"]');
 		return body && (
 			(
 				body.getAttribute('text') &&
@@ -618,7 +618,7 @@ var MessageTypeSwitcher = {
 		return;
 		var doc = this.document;
 		var nodes = doc.evaluate(
-				'/descendant::*[local-name()="BODY"]/descendant::text()[not(ancestor::*[@class="'+this.kCHARACTER+'"])]',
+				'/descendant::*[translate(local-name(), "body", "BODY")="BODY"]/descendant::text()[not(ancestor::*[@class="'+this.kCHARACTER+'"])]',
 				doc,
 				null,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
