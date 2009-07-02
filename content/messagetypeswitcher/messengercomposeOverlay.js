@@ -566,6 +566,8 @@ var MessageTypeSwitcher = {
 	{
 		if (this.isHTMLMode()) return;
 
+		this.saveSelection();
+
 		var body = this.document.body;
 		if (body.firstChild.localName != 'pre') {
 			var range = this.document.createRange();
@@ -581,6 +583,8 @@ var MessageTypeSwitcher = {
 		this.splitToCharacters();
 		this.breakLines();
 		this.clearContainers();
+
+		this.restoreSelection();
 	},
 	splitToCharacters : function()
 	{
