@@ -132,8 +132,10 @@ var MessageTypeSwitcher = {
 					}
 					window.setTimeout(function() {
 						if (MessageTypeSwitcher.isHTMLMode()) return;
+						MessageTypeSwitcher.saveSelection();
 						MessageTypeSwitcher.clearAllStyles();
 						MessageTypeSwitcher.setPlainTextStyle(true);
+						MessageTypeSwitcher.restoreSelection();
 					}, 0);
 					MessageTypeSwitcher.inStartupProcess = false;
 				}, 0);
@@ -222,6 +224,7 @@ var MessageTypeSwitcher = {
 
 	toggleHTMLCommands : function(aEnable)
 	{
+		this.saveSelection();
 		if (
 			!aEnable &&
 			!this.inStartupProcess &&
@@ -233,12 +236,14 @@ var MessageTypeSwitcher = {
 		else {
 			this.setPlainTextStyle(false);
 		}
+		this.restoreSelection();
 		this.updateToggleHTMLModeButton();
 	},
 
 	setPlainTextStyle : function(aPlain)
 	{
-		var body = this.document.body;
+		var doc = this.document;
+		var body = doc.body;
 		var style = body.style;
 		if (aPlain) {
 			// bodyにwhite-spaceを設定すると、プレーンテキストとして送信する時に何故か
@@ -254,16 +259,41 @@ var MessageTypeSwitcher = {
 			EditorRemoveTextProperty('font', 'size');
 			EditorRemoveTextProperty('small', '');
 			EditorRemoveTextProperty('big', '');
-			doStatefulCommand('cmd_paragraphState', '')
+			doStatefulCommand('cmd_paragraphState', '');
+
+			var range = doc.createRange();
+			range.selectNodeContents(body);
+			if (this.signature) range.setEndBefore(this.signature);
+			var pre = doc.createElement('pre');
+			pre.setAttribute('_moz_dirty', '');
+			pre.setAttribute('moz-plaintext-mail-body', 'true');
+			pre.appendChild(range.extractContents());
+			range.insertNode(pre);
+			range.detach();
 		}
 		else {
 //			style.whiteSpace = '';
 			style.fontFamily = '';
 			style.width = '';
 			body.removeAttribute(this.kPLAINTEXT);
-			doStatefulCommand('cmd_paragraphState', '')
+			doStatefulCommand('cmd_paragraphState', '');
+
+			var preNodes = this.plainTextBodyContainers,
+				pre,
+				contents,
+				fragment;
+			for (var i = preNodes.snapshotLength - 1; i > -1; i--)
+			{
+				fragment = doc.createDocumentFragment();
+				pre = preNodes.snapshotItem(i);
+				Array.slice(pre.childNodes).forEach(function(aNode) {
+					fragment.appendChild(pre.removeChild(aNode));
+				});
+				pre.parentNode.insertBefore(fragment, pre);
+				pre.parentNode.removeChild(pre);
+			}
 		}
-//		var body = this.document.body;
+//		var body = doc.body;
 //		body.innerHTML = body.innerHTML.replace(/<BR>\n|\n<BR>|\n<BR>\n/g, '<BR>');
 	},
 
@@ -273,8 +303,6 @@ var MessageTypeSwitcher = {
 		try {
 			frame.setAttribute('collapsed', true);
 			var doc = this.document;
-
-			this.saveSelection();
 
 			doc.defaultView.focus();
 
@@ -370,8 +398,6 @@ var MessageTypeSwitcher = {
 			body.setAttribute('text', this.Prefs.getCharPref('msgcompose.text_color'));
 			body.setAttribute('bgcolor', this.Prefs.getCharPref('msgcompose.background_color'));
 
-			this.restoreSelection();
-
 			doc.defaultView.scrollTo(0, 0);
 		}
 		catch(e) {
@@ -404,18 +430,17 @@ var MessageTypeSwitcher = {
 		var doc = this.document;
 		var start = this.getSingleNodeByXPath('/descendant::*[@moz-selection-point="start"]');
 		var end = this.getSingleNodeByXPath('/descendant::*[@moz-selection-point="end"]');
-		if (!start || !end) return;
+		if (start && end) {
+			var sel = doc.defaultView.getSelection();
+			sel.removeAllRanges();
 
-		var sel = doc.defaultView.getSelection();
-		sel.removeAllRanges();
-
-		var range = doc.createRange();
-		range.setStartAfter(start);
-		range.setEndBefore(end);
-		sel.addRange(range);
-
-		start.parentNode.removeChild(start);
-		end.parentNode.removeChild(end);
+			var range = doc.createRange();
+			range.setStartAfter(start);
+			range.setEndBefore(end);
+			sel.addRange(range);
+		}
+		if (start) start.parentNode.removeChild(start);
+		if (end) end.parentNode.removeChild(end);
 	},
 
 
@@ -423,7 +448,7 @@ var MessageTypeSwitcher = {
 	{
 		var doc = this.document;
 		return doc.evaluate(
-				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature")) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
+				'/descendant::*[contains(" H1 H2 H3 H4 H5 H6 FONT B I U SMALL BIG DIV BLOCKQUOTE A IMG HR TABLE CAPTION TD TH UL OL LI ", concat(" ", local-name(), " ")) or (local-name()="PRE" and not(@class="moz-signature") and not(@moz-plaintext-mail-body)) or (local-name()="SPAN" and contains(@class, "mozToc"))]',
 				doc,
 				null,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -441,6 +466,26 @@ var MessageTypeSwitcher = {
 				null,
 				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
 				null
+			);
+	},
+
+	get plainTextBodyContainers()
+	{
+		var doc = this.document;
+		return doc.evaluate(
+				'/descendant::*[local-name()="PRE" and @moz-plaintext-mail-body="true"]',
+				doc,
+				null,
+				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+				null
+			);
+	},
+
+	get signature()
+	{
+		return this.getSingleNodeByXPath(
+				'/descendant::*[local-name()="PRE" and @class="moz-signature"]',
+				this.document
 			);
 	},
 
