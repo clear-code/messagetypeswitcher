@@ -114,7 +114,7 @@ var MessageTypeSwitcher = {
 					params.identity.composeHtml = MessageTypeSwitcher.initialComposeHtmlMode;
 			]]>.toString()
 		).replace(
-			/(\}\))?$/,
+			/(\}\)?)$/,
 			<![CDATA[
 				window.setTimeout(function() {
 					if (!MessageTypeSwitcher.getSingleNodeByXPath('/descendant::*[translate(local-name(), "body", "BODY")="BODY"]')) {
