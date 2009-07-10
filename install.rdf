@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="messagetypeswitcher@clear-code.com"
                    em:name="Plain Text Massage to HTML"
-                   em:version="0.5"
+                   em:version="0.6"
                    em:description="Provides ability to switch message type from Plain Text to HTML."
                    em:creator="ClearCode Inc."
                    em:homepageURL="http://www.clear-code.com/">

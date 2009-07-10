@@ -38,6 +38,7 @@ var MessageTypeSwitcher = {
 	kPLAINTEXT : 'messagetypeswitcher-plaintext-body',
 	kCHARACTER : 'messagetypeswitcher-character',
 	kGENERATED : 'messagetypeswitcher-generated',
+	kPOINT     : 'moz-selection-point',
 
 	initialComposeHtmlMode : null,
 	inStartupProcess : true,
@@ -121,6 +122,7 @@ var MessageTypeSwitcher = {
 						window.setTimeout(arguments.callee, 10);
 						return;
 					}
+
 					if (!MessageTypeSwitcher.initialComposeHtmlMode && !MessageTypeSwitcher.isHTMLMessage()) {
 						gSendFormat = nsIMsgCompSendFormat.PlainText;
 						var item = document.getElementById('format_plain');
@@ -135,7 +137,9 @@ var MessageTypeSwitcher = {
 						MessageTypeSwitcher.saveSelection();
 						MessageTypeSwitcher.clearAllStyles();
 						MessageTypeSwitcher.setPlainTextStyle(true);
-						MessageTypeSwitcher.restoreSelection();
+						window.setTimeout(function() {
+							MessageTypeSwitcher.restoreSelection();
+						}, 0);
 					}, 0);
 					MessageTypeSwitcher.inStartupProcess = false;
 				}, 0);
@@ -245,6 +249,8 @@ var MessageTypeSwitcher = {
 		var doc = this.document;
 		var body = doc.body;
 		var style = body.style;
+		var start = this.getSelectionPoint('start');
+		var end = this.getSelectionPoint('end');
 		if (aPlain) {
 			// bodyにwhite-spaceを設定すると、プレーンテキストとして送信する時に何故か
 			// 本文先頭に半角スペースが1つ挿入された状態となってしまう。
@@ -268,6 +274,21 @@ var MessageTypeSwitcher = {
 			pre.setAttribute('_moz_dirty', '');
 			pre.setAttribute('moz-plaintext-mail-body', 'true');
 			pre.appendChild(range.extractContents());
+			if (
+				!pre.hasChildNodes() ||
+				(
+					pre.childNodes.length == 2 &&
+					pre.firstChild.nodeType == Node.ELEMENT_NODE &&
+					pre.firstChild.getAttribute(this.kPOINT) == 'start' &&
+					pre.lastChild.nodeType == Node.ELEMENT_NODE &&
+					pre.lastChild.getAttribute(this.kPOINT) == 'end'
+				)
+				) {
+				pre.appendChild(doc.createTextNode(''));
+				pre.appendChild(doc.createElement('BR'));
+			}
+			if (!start) pre.insertBefore(this.createSelectionPoint('start'), pre.firstChild);
+			if (!end) pre.insertBefore(this.createSelectionPoint('end'), pre.firstChild);
 			range.insertNode(pre);
 			range.detach();
 		}
@@ -285,6 +306,10 @@ var MessageTypeSwitcher = {
 			for (var i = preNodes.snapshotLength - 1; i > -1; i--)
 			{
 				fragment = doc.createDocumentFragment();
+				if (i == 0) {
+					if (!start) fragment.appendChild(this.createSelectionPoint('start'));
+					if (!end) fragment.appendChild(this.createSelectionPoint('end'));
+				}
 				pre = preNodes.snapshotItem(i);
 				Array.slice(pre.childNodes).forEach(function(aNode) {
 					fragment.appendChild(pre.removeChild(aNode));
@@ -415,21 +440,27 @@ var MessageTypeSwitcher = {
 		var range = sel.getRangeAt(0);
 		var contents = range.extractContents();
 
-		var node = doc.createElement('BR');
-		node.setAttribute('moz-selection-point', 'start');
-		contents.insertBefore(node.cloneNode(true), contents.firstChild);
-
-		node.setAttribute('moz-selection-point', 'end');
-		contents.appendChild(node);
+		contents.insertBefore(this.createSelectionPoint('start'), contents.firstChild);
+		contents.appendChild(this.createSelectionPoint('end'));
 
 		range.insertNode(contents);
+	},
+	createSelectionPoint : function(aType)
+	{
+		var node = this.document.createElement('BR');
+		node.setAttribute(this.kPOINT, aType);
+		return node;
+	},
+	getSelectionPoint : function(aType)
+	{
+		return this.getSingleNodeByXPath('/descendant::*[@'+this.kPOINT+'="'+aType+'"]');
 	},
 
 	restoreSelection : function()
 	{
 		var doc = this.document;
-		var start = this.getSingleNodeByXPath('/descendant::*[@moz-selection-point="start"]');
-		var end = this.getSingleNodeByXPath('/descendant::*[@moz-selection-point="end"]');
+		var start = this.getSelectionPoint('start');
+		var end = this.getSelectionPoint('end');
 		if (start && end) {
 			var sel = doc.defaultView.getSelection();
 			sel.removeAllRanges();
@@ -569,7 +600,7 @@ var MessageTypeSwitcher = {
 		this.saveSelection();
 
 		var body = this.document.body;
-		if (body.firstChild.localName != 'pre') {
+		if (String(body.firstChild.localName).toLowerCase() != 'pre') {
 			var range = this.document.createRange();
 			range.selectNodeContents(body);
 			var signature = this.signatureBlock;
