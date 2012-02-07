@@ -14,7 +14,7 @@
  * The Original Code is "Plain Text Massage to HTML".
  *
  * The Initial Developer of the Original Code is ClearCode Inc.
- * Portions created by the Initial Developer are Copyright (C) 2008-2009
+ * Portions created by the Initial Developer are Copyright (C) 2008-2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): ClearCode Inc. <info@clear-code.com>
@@ -86,6 +86,16 @@ var MessageTypeSwitcher = {
 	get signatureBlock()
 	{
 		return this.getSingleNodeByXPath('/descendant::*[translate(local-name(), "pre", "PRE")="PRE" and @class="moz-signature"]');
+	},
+
+	get usePreBody()
+	{
+		try {
+			return this.Prefs.getBoolPref("extensions.messagetypeswitcher@clear-code.com.usePreBody");
+		}
+		catch(e) {
+		}
+		return false;
 	},
 
 	init : function()
@@ -252,10 +262,10 @@ var MessageTypeSwitcher = {
 		var start = this.getSelectionPoint('start');
 		var end = this.getSelectionPoint('end');
 		if (aPlain) {
-			// body‚Éwhite-space‚ğİ’è‚·‚é‚ÆAƒvƒŒ[ƒ“ƒeƒLƒXƒg‚Æ‚µ‚Ä‘—M‚·‚é‚É‰½ŒÌ‚©
-			// –{•¶æ“ª‚É”¼ŠpƒXƒy[ƒX‚ª1‚Â‘}“ü‚³‚ê‚½ó‘Ô‚Æ‚È‚Á‚Ä‚µ‚Ü‚¤B
-			// ‚Ä‚¢‚¤‚©‚»‚à‚»‚àAwhite-space‚ª–¢İ’è‚Å‚àEnter‚Å‰üs‚µ‚½‚ç‰üs‚³‚ê‚é
-			// iBR—v‘f‚ª‘}“ü‚³‚ê‚éj‚Ì‚ÅA‚±‚Ìw’è‚Í•s—v‚İ‚½‚¢B
+			// bodyã«white-spaceã‚’è¨­å®šã™ã‚‹ã¨ã€ãƒ—ãƒ¬ãƒ¼ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã¨ã—ã¦é€ä¿¡ã™ã‚‹æ™‚ã«ä½•æ•…ã‹
+			// æœ¬æ–‡å…ˆé ­ã«åŠè§’ã‚¹ãƒšãƒ¼ã‚¹ãŒ1ã¤æŒ¿å…¥ã•ã‚ŒãŸçŠ¶æ…‹ã¨ãªã£ã¦ã—ã¾ã†ã€‚
+			// ã¦ã„ã†ã‹ãã‚‚ãã‚‚ã€white-spaceãŒæœªè¨­å®šã§ã‚‚Enterã§æ”¹è¡Œã—ãŸã‚‰æ”¹è¡Œã•ã‚Œã‚‹
+			// ï¼ˆBRè¦ç´ ãŒæŒ¿å…¥ã•ã‚Œã‚‹ï¼‰ã®ã§ã€ã“ã®æŒ‡å®šã¯ä¸è¦ã¿ãŸã„ã€‚
 //			style.whiteSpace = '-moz-pre-wrap';
 			style.fontFamily = '-moz-fixed';
 			style.width = this.Prefs.getIntPref('mailnews.wraplength')+'ch';
@@ -270,26 +280,32 @@ var MessageTypeSwitcher = {
 			var range = doc.createRange();
 			range.selectNodeContents(body);
 			if (this.signature) range.setEndBefore(this.signature);
-			var pre = doc.createElement('pre');
-			pre.setAttribute('_moz_dirty', '');
-			pre.setAttribute('moz-plaintext-mail-body', 'true');
-			pre.appendChild(range.extractContents());
+			var container;
+			if (this.usePreBody) {
+				container = doc.createElement('pre');
+				container.setAttribute('_moz_dirty', '');
+				container.setAttribute('moz-plaintext-mail-body', 'true');
+			}
+			else {
+				container = doc.createDocumentFragment();
+			}
+			container.appendChild(range.extractContents());
 			if (
-				!pre.hasChildNodes() ||
+				!container.hasChildNodes() ||
 				(
-					pre.childNodes.length == 2 &&
-					pre.firstChild.nodeType == Node.ELEMENT_NODE &&
-					pre.firstChild.getAttribute(this.kPOINT) == 'start' &&
-					pre.lastChild.nodeType == Node.ELEMENT_NODE &&
-					pre.lastChild.getAttribute(this.kPOINT) == 'end'
+					container.childNodes.length == 2 &&
+					container.firstChild.nodeType == Node.ELEMENT_NODE &&
+					container.firstChild.getAttribute(this.kPOINT) == 'start' &&
+					container.lastChild.nodeType == Node.ELEMENT_NODE &&
+					container.lastChild.getAttribute(this.kPOINT) == 'end'
 				)
 				) {
-				pre.appendChild(doc.createTextNode(''));
-				pre.appendChild(doc.createElement('BR'));
+				container.appendChild(doc.createTextNode(''));
+				container.appendChild(doc.createElement('BR'));
 			}
-			if (!start) pre.insertBefore(this.createSelectionPoint('start'), pre.firstChild);
-			if (!end) pre.insertBefore(this.createSelectionPoint('end'), pre.firstChild);
-			range.insertNode(pre);
+			if (!start) container.insertBefore(this.createSelectionPoint('start'), container.firstChild);
+			if (!end) container.insertBefore(this.createSelectionPoint('end'), container.firstChild);
+			range.insertNode(container);
 			range.detach();
 		}
 		else {
@@ -374,8 +390,8 @@ var MessageTypeSwitcher = {
 						node.innerHTML = node.innerHTML
 											.replace(/^/gm, '&gt; ')
 											.replace(/(<br>)/gi, '$1&gt; ');
-						// •ÔMŒ³ƒ[ƒ‹‚Ìˆø—p‚ÍA‚»‚Ì‚Ü‚Ü“WŠJ‚·‚é‚Æ‘O‚Ìs‚ÆŒq‚ª‚Á‚Ä‚µ‚Ü‚¤‚Ì‚Å
-						// br‚ğæ“ª‚É‘«‚µ‚Ä‚â‚é
+						// è¿”ä¿¡å…ƒãƒ¡ãƒ¼ãƒ«ã®å¼•ç”¨ã¯ã€ãã®ã¾ã¾å±•é–‹ã™ã‚‹ã¨å‰ã®è¡Œã¨ç¹‹ãŒã£ã¦ã—ã¾ã†ã®ã§
+						// brã‚’å…ˆé ­ã«è¶³ã—ã¦ã‚„ã‚‹
 						if (node.previousSibling && node.previousSibling.nodeType == Node.TEXT_NODE) {
 							node.insertBefore(doc.createElement('br'), node.firstChild);
 						}
