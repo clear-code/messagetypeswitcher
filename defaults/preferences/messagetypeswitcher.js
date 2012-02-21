@@ -1,3 +1,4 @@
+pref("extensions.messagetypeswitcher@clear-code.com.usePreBody", false);
 pref("extensions.messagetypeswitcher@clear-code.com.clearHTMLElements", true);
 pref("extensions.messagetypeswitcher@clear-code.com.button.initialShow.done", false);
 
