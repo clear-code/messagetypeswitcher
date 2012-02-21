@@ -412,7 +412,8 @@ var MessageTypeSwitcher = {
 					case 'blockquote':
 						node.innerHTML = node.innerHTML
 											.replace(/^/gm, '&gt; ')
-											.replace(/(<br>)/gi, '$1&gt; ');
+											.replace(/(<br\s*\/?>)/gi, '$1&gt; ')
+											.replace(/(<br\s*\/?>)\&gt; $/, '$1'); // redule last needless "> "
 						// 返信元メールの引用は、そのまま展開すると前の行と繋がってしまうので
 						// brを先頭に足してやる
 						if (node.previousSibling && node.previousSibling.nodeType == Node.TEXT_NODE) {
@@ -420,9 +421,14 @@ var MessageTypeSwitcher = {
 						}
 						range.selectNodeContents(node);
 						contents = range.extractContents();
+						var container = doc.createElement('span');
+						container.setAttribute('_moz_dirty', '');
+						container.setAttribute('_moz_quote', 'true');
+						container.setAttribute('style', 'white-space: pre;');
+						container.appendChild(contents);
 						range.selectNode(node);
 						range.deleteContents();
-						range.insertNode(contents);
+						range.insertNode(container);
 						break;
 					case 'a':
 						var uri = node.href;
