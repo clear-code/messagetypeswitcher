@@ -156,28 +156,11 @@ var MessageTypeSwitcher = {
 			$1]]>.toString()
 		));
 
-		var originalCloseWindow = window.MsgComposeCloseWindow;
-		window.MsgComposeCloseWindow = function(aRecycleIt) {
-			if (!MessageTypeSwitcher.initialComposeHtmlMode &&
-				gSendFormat == nsIMsgCompSendFormat.PlainText) {
-				/**
-				 * We have to reset the send format before recycling, because
-				 * "PlainText" can expose HTML tags to the message body on the
-				 * next startup unexpectedly.
-				 */
-				gSendFormat = nsIMsgCompSendFormat.HTML;
-				/**
-				 * And, we have to destroy this window after a delay, because
-				 * the above changing doesn't work in this event loop.
-				 */
-				widnow.setTimeout(function() {
-					originalCloseWindow.apply(this, arguments);
-				}, 0);
-			}
-			else {
-				originalCloseWindow.apply(this, arguments);
-			}
-		};
+		// prevent to recycle window (because it is too buggy!!)
+		eval('gComposeRecyclingListener.onClose = '+gComposeRecyclingListener.onClose.toSource().replace(
+			/(\}\)?)$/,
+			'window.close(); $1'
+		));
 
 		eval('window.OutputFormatMenuSelect = '+window.OutputFormatMenuSelect.toSource().replace(
 			'format_menubar.hidden = gHideMenus;',
