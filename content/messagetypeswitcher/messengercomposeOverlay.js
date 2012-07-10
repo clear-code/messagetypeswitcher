@@ -404,14 +404,17 @@ var MessageTypeSwitcher = {
 						}
 						range.selectNodeContents(node);
 						contents = range.extractContents();
-						var container = doc.createElement('span');
-						container.setAttribute('_moz_dirty', '');
-						container.setAttribute('_moz_quote', 'true');
-						container.setAttribute('style', 'white-space: pre;');
-						container.appendChild(contents);
+						if (!this.isNestedQuotation(node)) {
+							var container = doc.createElement('span');
+							container.setAttribute('_moz_dirty', '');
+							container.setAttribute('_moz_quote', 'true');
+							container.setAttribute('style', 'white-space: pre;');
+							container.appendChild(contents);
+							contents = container;
+						}
 						range.selectNode(node);
 						range.deleteContents();
-						range.insertNode(container);
+						range.insertNode(contents);
 						break;
 					case 'a':
 						var uri = node.href;
@@ -457,6 +460,13 @@ var MessageTypeSwitcher = {
 			alert(e);
 		}
 		frame.removeAttribute('collapsed');
+	},
+	isNestedQuotation : function(aNode)
+	{
+		return this.getSingleNodeByXPath(
+				'ancestor::*[translate(local-name(), "blockqute", "BLOCKQUTE")="BLOCKQUOTE"]',
+				aNode
+			);
 	},
 
 	saveSelection : function()
